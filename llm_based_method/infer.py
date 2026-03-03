@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
 
 # 配置路径
-MODEL_PATH = "/root/autodl-tmp/huggingface/models/llama3_8b_opinion_merged"
+MODEL_PATH = "/root/autodl-tmp/huggingface/models/qwen3_8b_opinion_merged"
 TEST_DATA_PATH = "test/Test_reviews.csv" 
 OUTPUT_CSV_PATH = "Result.csv"
 

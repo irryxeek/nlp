@@ -3,11 +3,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 import os
 
-BASE_MODEL_ID = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-ADAPTER_DIR = "llama3_8b_opinion_lora_fp16/checkpoint-404"
+BASE_MODEL_ID = "Qwen/Qwen3-8B"
+ADAPTER_DIR = "qwen3_8b_opinion_lora_fp16/checkpoint-1212"
 
 # ★★★ 改这里：保存到系统盘 ★★★
-MERGED_DIR = "/root/autodl-tmp/huggingface/models/llama3_8b_opinion_merged"
+MERGED_DIR = "/root/autodl-tmp/huggingface/models/qwen3_8b_opinion_merged"
 
 os.makedirs(MERGED_DIR, exist_ok=True)
 
@@ -15,8 +15,8 @@ def main():
     print("==> Loading base model...")
     base_model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL_ID,
-        dtype=torch.float16,     # 新写法
-        device_map="auto",
+        torch_dtype=torch.float16,
+        device_map={"": "cpu"},
     )
 
     print("==> Loading LoRA adapter from", ADAPTER_DIR)

@@ -1,14 +1,15 @@
 # finetune_lora_fp16.py  （你可以仍然叫 f.py）
 
 import json
+import torch
 from datasets import load_dataset
-from transformers import AutoTokenizer, TrainingArguments, AutoModelForCausalLM
+from transformers import AutoTokenizer
 from peft import LoraConfig
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 
-MODEL_ID = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+MODEL_ID = "Qwen/Qwen3-8B"
 DATA_PATH = "train_sft.jsonl"      # 上一步 build_sft_dataset.py 生成的文件
-OUTPUT_DIR = "llama3_8b_opinion_lora_fp16"
+OUTPUT_DIR = "qwen3_8b_opinion_lora_fp16"
 
 # 1. tokenizer
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
@@ -49,7 +50,7 @@ def formatting_prompts_func(example):
 dataset = dataset.map(formatting_prompts_func)
 
 # 4. 训练参数
-args = TrainingArguments(
+args = SFTConfig(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=1,      # 为了保险一点，先用 1，看显存再调大 4/8/16
     gradient_accumulation_steps=8,
@@ -63,23 +64,23 @@ args = TrainingArguments(
     warmup_ratio=0.03,
     lr_scheduler_type="cosine",
     weight_decay=0.0,
+    gradient_checkpointing=True,
+    dataset_text_field="text",
+    max_length=1024,
+    packing=False,
+    model_init_kwargs={
+        "dtype": torch.float16,
+        "use_cache": False,
+    },
 )
 
 # 5. SFTTrainer：不再传 BitsAndBytesConfig、quantization_config
 trainer = SFTTrainer(
     model=MODEL_ID,
-    tokenizer=tokenizer,
+    processing_class=tokenizer,
     train_dataset=dataset,
-    dataset_text_field="text",
-    max_seq_length=1024,
-    packing=False,
     args=args,
     peft_config=peft_config,
-    model_init_kwargs={
-        "torch_dtype": "float16",
-        "device_map": "auto",
-        "use_cache": False,
-    },
 )
 
 trainer.train()
